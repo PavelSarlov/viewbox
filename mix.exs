@@ -49,7 +49,10 @@ defmodule Viewbox.MixProject do
       {:telemetry_poller, "~> 1.0"},
       {:gettext, "~> 0.20"},
       {:jason, "~> 1.2"},
-      {:plug_cowboy, "~> 2.5"}
+      {:plug_cowboy, "~> 2.5"},
+      {:membrane_core, "~> 0.10"},
+      {:membrane_rtmp_plugin, "~> 0.9.1"},
+      {:membrane_http_adaptive_stream_plugin, "~> 0.8.0"}
     ]
   end
 

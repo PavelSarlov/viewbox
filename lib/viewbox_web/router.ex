@@ -18,6 +18,7 @@ defmodule ViewboxWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
+    get "/video/:filename", LivestreamController, :home
   end
 
   # Other scopes may use custom stacks.
