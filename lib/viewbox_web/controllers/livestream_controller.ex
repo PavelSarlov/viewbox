@@ -5,8 +5,8 @@ defmodule ViewboxWeb.LivestreamController do
   alias Viewbox.Repo
   alias Plug
 
-  @output_dir Application.compile_env(Viewbox, :output_dir, "output")
-  @stream_file Application.compile_env(Viewbox, :stream_file, "index.m3u8")
+  @output_dir Application.compile_env(:viewbox, :stream_output_dir, "output")
+  @output_file Application.compile_env(:viewbox, :stream_output_file, "index.m3u8")
 
   def index(conn, %{"username" => username}) do
     user = Repo.get_by!(User, username: username)
@@ -15,12 +15,14 @@ defmodule ViewboxWeb.LivestreamController do
   end
 
   def stream(conn, %{"username" => username}) do
-    path = Path.join([@output_dir, username, "live"])
+    path = [@output_dir, username, "live", @output_file] |> Path.join() |> Path.expand()
 
-    if File.exists?(path) do
-      conn |> Plug.Conn.send_file(200, path)
-    else
-      conn |> Plug.Conn.send_resp(404, "File not found")
+    case File.exists?(path) do
+      true ->
+        conn |> Plug.Conn.send_file(200, path)
+
+      false ->
+        conn |> Plug.Conn.send_resp(404, "File not found")
     end
   end
 end

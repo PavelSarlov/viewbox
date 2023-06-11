@@ -3,7 +3,7 @@ defmodule Viewbox.Livestream do
 
   alias Membrane.RTMP.SourceBin
 
-  @stream_output_dir Application.compile_env(Viewbox, :stream_output_dir, "output")
+  @stream_output_dir Application.compile_env(:viewbox, :stream_output_dir, "output")
 
   @impl true
   def handle_init(socket: socket) do
@@ -15,6 +15,7 @@ defmodule Viewbox.Livestream do
           target_window_duration: :infinity,
           muxer_segment_duration: 15 |> Membrane.Time.seconds(),
           storage: %Membrane.HTTPAdaptiveStream.Storages.FileStorage{
+            # Figure out how to dynamically set this shit based on the stream_key
             directory: @stream_output_dir
           }
         }
@@ -52,6 +53,8 @@ defmodule Viewbox.Livestream do
 
   @impl true
   def handle_other({:socket_control_needed, socket, source} = notification, _ctx, state) do
+    IO.puts("what now")
+
     case SourceBin.pass_control(socket, source) do
       :ok ->
         :ok

@@ -6,8 +6,8 @@ defmodule Viewbox.Application do
 
   use Application
 
-  @port Application.compile_env(Viewbox, :port, 4001)
-  @host Application.compile_env(Viewbox, :host, {127, 0, 0, 1})
+  @port Application.compile_env(:viewbox, :stream_port, 4001)
+  @host Application.compile_env(:viewbox, :stream_host, {127, 0, 0, 1})
 
   @impl true
   def start(_type, _args) do
@@ -35,8 +35,6 @@ defmodule Viewbox.Application do
       {Phoenix.PubSub, name: Viewbox.PubSub},
       # Start the Endpoint (http/https)
       ViewboxWeb.Endpoint
-      # Start a worker by calling: Viewbox.Worker.start_link(arg)
-      # {Viewbox.Worker, arg}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
