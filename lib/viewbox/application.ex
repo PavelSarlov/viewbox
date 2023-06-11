@@ -6,21 +6,20 @@ defmodule Viewbox.Application do
 
   use Application
 
-  @stream_port Application.compile_env(Viewbox, :stream_port, 9009)
-  @stream_host Application.compile_env(Viewbox, :stream_host, {127, 0, 0, 1})
+  @port Application.compile_env(Viewbox, :port, 4001)
+  @host Application.compile_env(Viewbox, :host, {127, 0, 0, 1})
 
   @impl true
   def start(_type, _args) do
     tcp_server_options = %TcpServer{
-      port: @stream_port,
+      port: @port,
       listen_options: [
         :binary,
         packet: :raw,
         active: false,
-        ip: @stream_host
+        ip: @host
       ],
       socket_handler: fn socket ->
-        IO.inspect(socket)
         Viewbox.Livestream.start_link(socket: socket)
       end
     }
@@ -30,10 +29,10 @@ defmodule Viewbox.Application do
 
       # Start the Telemetry supervisor
       ViewboxWeb.Telemetry,
+      # Start the Ecto repository
+      Viewbox.Repo,
       # Start the PubSub system
       {Phoenix.PubSub, name: Viewbox.PubSub},
-      # Start Finch
-      {Finch, name: Viewbox.Finch},
       # Start the Endpoint (http/https)
       ViewboxWeb.Endpoint
       # Start a worker by calling: Viewbox.Worker.start_link(arg)

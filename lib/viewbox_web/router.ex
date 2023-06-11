@@ -2,29 +2,37 @@ defmodule ViewboxWeb.Router do
   use ViewboxWeb, :router
 
   pipeline :browser do
-    plug :accepts, ["html"]
-    plug :fetch_session
-    plug :fetch_live_flash
-    plug :put_root_layout, html: {ViewboxWeb.Layouts, :root}
-    plug :protect_from_forgery
-    plug :put_secure_browser_headers
+    plug(:accepts, ["html"])
+    plug(:fetch_session)
+    plug(:fetch_live_flash)
+    plug(:put_root_layout, html: {ViewboxWeb.Layouts, :root})
+    plug(:protect_from_forgery)
+    plug(:put_secure_browser_headers)
   end
 
   pipeline :api do
-    plug :accepts, ["json"]
+    plug(:accepts, ["json"])
   end
 
   scope "/", ViewboxWeb do
-    pipe_through :browser
+    pipe_through(:browser)
 
-    get "/", PageController, :home
-    get "/video/:filename", LivestreamController, :home
+    get("/", PageController, :index)
+    get("/live/:username", LivestreamController, :index)
+
+    # users
+    get("/users", UserController, :index)
+    get("/users/:username", UserController, :show)
+    get("/register", UserController, :new)
+    post("/users", UserController, :create)
   end
 
   # Other scopes may use custom stacks.
-  # scope "/api", ViewboxWeb do
-  #   pipe_through :api
-  # end
+  scope "/api", ViewboxWeb do
+    pipe_through(:api)
+
+    get("/stream/:username", LivestreamController, :stream)
+  end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:viewbox, :dev_routes) do
@@ -36,10 +44,9 @@ defmodule ViewboxWeb.Router do
     import Phoenix.LiveDashboard.Router
 
     scope "/dev" do
-      pipe_through :browser
+      pipe_through(:browser)
 
-      live_dashboard "/dashboard", metrics: ViewboxWeb.Telemetry
-      forward "/mailbox", Plug.Swoosh.MailboxPreview
+      live_dashboard("/dashboard", metrics: ViewboxWeb.Telemetry)
     end
   end
 end

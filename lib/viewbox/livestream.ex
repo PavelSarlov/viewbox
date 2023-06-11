@@ -3,17 +3,20 @@ defmodule Viewbox.Livestream do
 
   alias Membrane.RTMP.SourceBin
 
+  @stream_output_dir Application.compile_env(Viewbox, :stream_output_dir, "output")
+
   @impl true
   def handle_init(socket: socket) do
     spec = %ParentSpec{
       children: %{
-        src: %SourceBin{socket: socket},
+        src: %SourceBin{socket: socket, validator: Viewbox.Validator},
         sink: %Membrane.HTTPAdaptiveStream.SinkBin{
           manifest_module: Membrane.HTTPAdaptiveStream.HLS,
           target_window_duration: :infinity,
-          muxer_segment_duration: 8 |> Membrane.Time.seconds(),
-          persist?: false,
-          storage: %Membrane.HTTPAdaptiveStream.Storages.FileStorage{directory: "output"}
+          muxer_segment_duration: 15 |> Membrane.Time.seconds(),
+          storage: %Membrane.HTTPAdaptiveStream.Storages.FileStorage{
+            directory: @stream_output_dir
+          }
         }
       },
       links: [
