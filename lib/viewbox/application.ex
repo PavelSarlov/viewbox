@@ -20,12 +20,18 @@ defmodule Viewbox.Application do
         ip: @host
       ],
       socket_handler: fn socket ->
-        Viewbox.Livestream.start_link(socket: socket)
+        Agent.update(Viewbox.SocketAgent, fn old -> Enum.reverse([socket | Enum.reverse(old)]) end)
+
+        Viewbox.LiveStream.start_link(socket: socket)
       end
     }
 
     children = [
       %{id: TcpServer, start: {TcpServer, :start_link, [tcp_server_options]}},
+      %{
+        id: Viewbox.SocketAgent,
+        start: {Agent, :start_link, [fn -> [] end, [name: Viewbox.SocketAgent]]}
+      },
 
       # Start the Telemetry supervisor
       ViewboxWeb.Telemetry,

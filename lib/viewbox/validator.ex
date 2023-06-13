@@ -5,7 +5,6 @@ defmodule Viewbox.Validator do
 
   @impl true
   def validate_publish(message) do
-    IO.inspect(message)
     validate_stream_key(message.stream_key)
   end
 
@@ -21,6 +20,7 @@ defmodule Viewbox.Validator do
             {:error, "invalid stream key"}
 
           user ->
+            # somehow pass username to correct sink
             {:ok, "publish stream success"}
         end
     end

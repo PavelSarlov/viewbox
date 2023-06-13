@@ -1,4 +1,4 @@
-defmodule Viewbox.Livestream do
+defmodule Viewbox.LiveStream do
   use Membrane.Pipeline
 
   alias Membrane.RTMP.SourceBin
@@ -6,16 +6,32 @@ defmodule Viewbox.Livestream do
   @stream_output_dir Application.compile_env(:viewbox, :stream_output_dir, "output")
 
   @impl true
-  def handle_init(socket: socket) do
+  def handle_init(opts) do
+    socket =
+      case Keyword.get(opts, :username) do
+        nil ->
+          Agent.get(Viewbox.SocketAgent, fn
+            [] -> Keyword.get(opts, :socket)
+            [socket | _] -> socket
+          end)
+
+        _ ->
+          [socket | _] =
+            Agent.get_and_update(Viewbox.SocketAgent, fn [socket | rest] ->
+              {[socket | rest], rest}
+            end)
+
+          socket
+      end
+
     spec = %ParentSpec{
       children: %{
         src: %SourceBin{socket: socket, validator: Viewbox.Validator},
         sink: %Membrane.HTTPAdaptiveStream.SinkBin{
           manifest_module: Membrane.HTTPAdaptiveStream.HLS,
           target_window_duration: :infinity,
-          muxer_segment_duration: 15 |> Membrane.Time.seconds(),
-          storage: %Membrane.HTTPAdaptiveStream.Storages.FileStorage{
-            # Figure out how to dynamically set this shit based on the stream_key
+          muxer_segment_duration: 10 |> Membrane.Time.seconds(),
+          storage: %Viewbox.FileStorage{
             directory: @stream_output_dir
           }
         }
@@ -53,8 +69,6 @@ defmodule Viewbox.Livestream do
 
   @impl true
   def handle_other({:socket_control_needed, socket, source} = notification, _ctx, state) do
-    IO.puts("what now")
-
     case SourceBin.pass_control(socket, source) do
       :ok ->
         :ok
@@ -64,5 +78,13 @@ defmodule Viewbox.Livestream do
     end
 
     {:ok, state}
+  end
+
+  def child_spec(opts) do
+    %{
+      id: Keyword.get(opts, :id, __MODULE__),
+      start: {__MODULE__, :start_link, opts},
+      restart: :transient
+    }
   end
 end
