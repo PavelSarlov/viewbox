@@ -20,9 +20,16 @@ defmodule Viewbox.Application do
         ip: @host
       ],
       socket_handler: fn socket ->
-        Agent.update(Viewbox.SocketAgent, fn old -> Enum.reverse([socket | Enum.reverse(old)]) end)
+        # Agent.update(Viewbox.SocketAgent, fn old -> Enum.reverse([socket | Enum.reverse(old)]) end)
 
-        Viewbox.LiveStream.start_link(socket: socket)
+        {:ok, _supervisor_pid, pipeline_pid} =
+          Viewbox.LiveStream.start_link(
+            socket: socket,
+            validator: %Viewbox.Validator{},
+            use_ssl?: false
+          )
+
+        {:ok, pipeline_pid}
       end
     }
 

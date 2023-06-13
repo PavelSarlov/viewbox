@@ -1,54 +1,49 @@
 defmodule Viewbox.LiveStream do
   use Membrane.Pipeline
 
+  alias Membrane.HTTPAdaptiveStream.Sink
   alias Membrane.RTMP.SourceBin
 
   @stream_output_dir Application.compile_env(:viewbox, :stream_output_dir, "output")
 
   @impl true
-  def handle_init(opts) do
-    socket =
-      case Keyword.get(opts, :username) do
-        nil ->
-          Agent.get(Viewbox.SocketAgent, fn
-            [] -> Keyword.get(opts, :socket)
-            [socket | _] -> socket
-          end)
-
-        _ ->
-          [socket | _] =
-            Agent.get_and_update(Viewbox.SocketAgent, fn [socket | rest] ->
-              {[socket | rest], rest}
-            end)
-
-          socket
-      end
-
-    spec = %ParentSpec{
-      children: %{
-        src: %SourceBin{socket: socket, validator: Viewbox.Validator},
-        sink: %Membrane.HTTPAdaptiveStream.SinkBin{
-          manifest_module: Membrane.HTTPAdaptiveStream.HLS,
-          target_window_duration: :infinity,
-          muxer_segment_duration: 10 |> Membrane.Time.seconds(),
-          storage: %Viewbox.FileStorage{
-            directory: @stream_output_dir
-          }
-        }
-      },
-      links: [
-        link(:src)
-        |> via_out(:audio)
-        |> via_in(Pad.ref(:input, :audio), options: [encoding: :AAC])
-        |> to(:sink),
-        link(:src)
-        |> via_out(:video)
-        |> via_in(Pad.ref(:input, :video), options: [encoding: :H264])
-        |> to(:sink)
-      ]
+  def handle_init(_ctx, socket: socket, validator: validator, use_ssl?: use_ssl?) do
+    segment_duration = %Sink.SegmentDuration{
+      min: 8 |> Membrane.Time.seconds(),
+      target: 10 |> Membrane.Time.seconds()
     }
 
-    {{:ok, spec: spec, playback: :playing}, %{socket: socket}}
+    spec = [
+      child(:src, %SourceBin{
+        socket: socket,
+        validator: validator,
+        use_ssl?: use_ssl?
+      }),
+      child(:sink, %Membrane.HTTPAdaptiveStream.SinkBin{
+        manifest_module: Membrane.HTTPAdaptiveStream.HLS,
+        persist?: true,
+        target_window_duration: :infinity,
+        hls_mode: :muxed_av,
+        mode: :live,
+        storage: %Viewbox.FileStorage{
+          directory: @stream_output_dir
+        }
+      }),
+      get_child(:src)
+      |> via_out(:audio)
+      |> via_in(Pad.ref(:input, :audio),
+        options: [encoding: :AAC, segment_duration: segment_duration]
+      )
+      |> get_child(:sink),
+      get_child(:src)
+      |> via_out(:video)
+      |> via_in(Pad.ref(:input, :video),
+        options: [encoding: :H264, segment_duration: segment_duration]
+      )
+      |> get_child(:sink)
+    ]
+
+    {[spec: spec, playback: :playing], %{socket: socket}}
   end
 
   @impl true

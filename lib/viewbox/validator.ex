@@ -1,11 +1,24 @@
 defmodule Viewbox.Validator do
   alias Viewbox.Accounts.User
   alias Viewbox.Repo
-  use Membrane.RTMP.MessageValidator
+
+  defstruct []
+end
+
+defimpl Membrane.RTMP.MessageValidator, for: Viewbox.Validator do
+  @impl true
+  def validate_release_stream(impl, message) do
+    validate_stream_key(message.stream_key)
+  end
 
   @impl true
-  def validate_publish(message) do
+  def validate_publish(impl, message) do
     validate_stream_key(message.stream_key)
+  end
+
+  @impl true
+  def validate_set_data_frame(impl, message) do
+    {:ok, "set data frame successful"}
   end
 
   @spec validate_stream_key(String.t()) :: {:error, any()} | {:ok, any()}

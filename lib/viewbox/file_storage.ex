@@ -16,18 +16,32 @@ defmodule Viewbox.FileStorage do
   def init(%__MODULE__{} = config), do: config
 
   @impl true
-  def store(name, contents, %{mode: :binary}, %__MODULE__{directory: location}) do
-    File.write(build_output_folder(location, "asd", name), contents, [:binary])
+  def store(
+        _parent_id,
+        name,
+        contents,
+        _metadata,
+        %{mode: :binary},
+        %__MODULE__{directory: location} = state
+      ) do
+    {File.write(build_output_folder(location, "asd", name), contents, [:binary]), state}
   end
 
   @impl true
-  def store(name, contents, %{mode: :text}, %__MODULE__{directory: location}) do
-    File.write(build_output_folder(location, "asd", name), contents)
+  def store(
+        _parent_id,
+        name,
+        contents,
+        _metadata,
+        %{mode: :text},
+        %__MODULE__{directory: location} = state
+      ) do
+    {File.write(build_output_folder(location, "asd", name), contents), state}
   end
 
   @impl true
-  def remove(name, _ctx, %__MODULE__{directory: location}) do
-    File.rm(build_output_folder(location, "asd", name))
+  def remove(_parent_id, name, _ctx, %__MODULE__{directory: location} = state) do
+    {File.rm(build_output_folder(location, "asd", name)), state}
   end
 
   defp build_output_folder(location, username, name) do
