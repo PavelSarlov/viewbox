@@ -23,10 +23,10 @@ defmodule Viewbox.LiveStream do
         manifest_module: Membrane.HTTPAdaptiveStream.HLS,
         persist?: true,
         target_window_duration: :infinity,
-        hls_mode: :muxed_av,
         mode: :live,
         storage: %Viewbox.FileStorage{
-          directory: @stream_output_dir
+          location: @stream_output_dir,
+          socket: socket
         }
       }),
       get_child(:src)
@@ -46,25 +46,26 @@ defmodule Viewbox.LiveStream do
     {[spec: spec, playback: :playing], %{socket: socket}}
   end
 
+  # Once the source initializes, we grant it the control over the tcp socket
   @impl true
-  def handle_notification(
+  def handle_child_notification(
         {:socket_control_needed, _socket, _source} = notification,
         :src,
         _ctx,
         state
       ) do
     send(self(), notification)
-    {:ok, state}
+
+    {[], state}
+  end
+
+  def handle_child_notification(_notification, _child, _ctx, state) do
+    {[], state}
   end
 
   @impl true
-  def handle_notification(_notification, _child, _ctx, state) do
-    {:ok, state}
-  end
-
-  @impl true
-  def handle_other({:socket_control_needed, socket, source} = notification, _ctx, state) do
-    case SourceBin.pass_control(socket, source) do
+  def handle_info({:socket_control_needed, socket, source} = notification, _ctx, state) do
+    case Membrane.RTMP.SourceBin.pass_control(socket, source) do
       :ok ->
         :ok
 
@@ -72,14 +73,17 @@ defmodule Viewbox.LiveStream do
         Process.send_after(self(), notification, 200)
     end
 
-    {:ok, state}
+    {[], state}
   end
 
-  def child_spec(opts) do
-    %{
-      id: Keyword.get(opts, :id, __MODULE__),
-      start: {__MODULE__, :start_link, opts},
-      restart: :transient
-    }
+  # The rest of the module is used for self-termination of the pipeline after processing finishes
+  @impl true
+  def handle_element_end_of_stream(:sink, _pad, _ctx, state) do
+    {[terminate: :shutdown], state}
+  end
+
+  @impl true
+  def handle_element_end_of_stream(_child, _pad, _ctx, state) do
+    {[], state}
   end
 end

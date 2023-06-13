@@ -31,7 +31,7 @@ defmodule ViewboxWeb.Router do
   scope "/api", ViewboxWeb do
     pipe_through(:api)
 
-    get("/stream/:username", LivestreamController, :stream)
+    get("/stream/:username/:filename", LivestreamController, :stream)
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development

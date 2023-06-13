@@ -1,19 +1,20 @@
 defmodule Viewbox.Validator do
-  alias Viewbox.Accounts.User
-  alias Viewbox.Repo
-
-  defstruct []
+  @enforce_keys [:socket]
+  defstruct @enforce_keys
 end
 
 defimpl Membrane.RTMP.MessageValidator, for: Viewbox.Validator do
+  alias Viewbox.Accounts.User
+  alias Viewbox.Repo
+
   @impl true
   def validate_release_stream(impl, message) do
-    validate_stream_key(message.stream_key)
+    validate_stream_key(impl, message.stream_key)
   end
 
   @impl true
   def validate_publish(impl, message) do
-    validate_stream_key(message.stream_key)
+    validate_stream_key(impl, message.stream_key)
   end
 
   @impl true
@@ -21,8 +22,9 @@ defimpl Membrane.RTMP.MessageValidator, for: Viewbox.Validator do
     {:ok, "set data frame successful"}
   end
 
-  @spec validate_stream_key(String.t()) :: {:error, any()} | {:ok, any()}
-  defp validate_stream_key(stream_key) do
+  @spec validate_stream_key(Membrane.RTMP.MessageValidator.t(), String.t()) ::
+          {:error, any()} | {:ok, any()}
+  defp validate_stream_key(impl, stream_key) do
     case Ecto.UUID.dump(stream_key) do
       :error ->
         {:error, "bad stream key"}
@@ -33,7 +35,10 @@ defimpl Membrane.RTMP.MessageValidator, for: Viewbox.Validator do
             {:error, "invalid stream key"}
 
           user ->
-            # somehow pass username to correct sink
+            Agent.update(Viewbox.SocketAgent, fn sockets ->
+              Map.put(sockets, impl.socket, user.username)
+            end)
+
             {:ok, "publish stream success"}
         end
     end
