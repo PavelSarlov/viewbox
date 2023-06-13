@@ -48,9 +48,9 @@ defmodule Viewbox.MixProject do
       {:gettext, "~> 0.20"},
       {:jason, "~> 1.2"},
       {:plug_cowboy, "~> 2.5"},
-      {:membrane_core, "~> 0.10"},
-      {:membrane_rtmp_plugin, "~> 0.9.1"},
-      {:membrane_http_adaptive_stream_plugin, "~> 0.8.0"},
+      {:membrane_core, "~> 0.11.2"},
+      {:membrane_rtmp_plugin, "~> 0.12.1"},
+      {:membrane_http_adaptive_stream_plugin, "~> 0.12.0"},
       {:bcrypt_elixir, "~> 3.0.1"}
     ]
   end

@@ -5,36 +5,54 @@ defmodule Viewbox.FileStorage do
   """
   @behaviour Membrane.HTTPAdaptiveStream.Storage
 
-  @enforce_keys [:directory]
+  @enforce_keys [:location, :socket]
   defstruct @enforce_keys
 
   @type t :: %__MODULE__{
-          directory: Path.t()
+          location: Path.t(),
+          socket: port()
         }
 
   @impl true
   def init(%__MODULE__{} = config), do: config
 
   @impl true
-  def store(name, contents, %{mode: :binary}, %__MODULE__{directory: location}) do
-    File.write(build_output_folder(location, "asd", name), contents, [:binary])
+  def store(
+        _parent_id,
+        name,
+        contents,
+        _metadata,
+        %{mode: :binary},
+        state
+      ) do
+    {File.write(build_output_folder(state, name), contents, [:binary]), state}
   end
 
   @impl true
-  def store(name, contents, %{mode: :text}, %__MODULE__{directory: location}) do
-    File.write(build_output_folder(location, "asd", name), contents)
+  def store(
+        _parent_id,
+        name,
+        contents,
+        _metadata,
+        %{mode: :text},
+        state
+      ) do
+    {File.write(build_output_folder(state, name), contents), state}
   end
 
   @impl true
-  def remove(name, _ctx, %__MODULE__{directory: location}) do
-    File.rm(build_output_folder(location, "asd", name))
+  def remove(_parent_id, name, _ctx, state) do
+    {File.rm(build_output_folder(state, name)), state}
   end
 
-  defp build_output_folder(location, username, name) do
-    path = [location, username, "live", name] |> Path.join()
+  defp build_output_folder(state, name) do
+    username =
+      Agent.get(Viewbox.SocketAgent, fn
+        sockets -> Map.fetch!(sockets, state.socket)
+      end)
 
+    path = [state.location, username, "live", name] |> Path.join()
     File.mkdir_p!(Path.dirname(path))
-
     path
   end
 end

@@ -10,7 +10,7 @@
 
 <script>
   var video = document.getElementById('player');
-  var videoSrc = window.location.origin + `/api/stream/<%= @user.username %>`;
+  var videoSrc = window.location.origin + `/api/stream/<%= @user.username %>/<%= @output_file %>`;
   if (Hls.isSupported()) {
     var hls = new Hls();
     hls.loadSource(videoSrc);

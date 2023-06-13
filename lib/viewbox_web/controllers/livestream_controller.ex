@@ -11,11 +11,11 @@ defmodule ViewboxWeb.LivestreamController do
   def index(conn, %{"username" => username}) do
     user = Repo.get_by!(User, username: username)
 
-    render(conn, :index, user: user)
+    render(conn, :index, user: user, output_file: @output_file)
   end
 
-  def stream(conn, %{"username" => username}) do
-    path = [@output_dir, username, "live", @output_file] |> Path.join() |> Path.expand()
+  def stream(conn, %{"username" => username, "filename" => filename}) do
+    path = [@output_dir, username, "live", filename] |> Path.join() |> Path.expand()
 
     case File.exists?(path) do
       true ->
