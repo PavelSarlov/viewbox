@@ -1,1 +1,7 @@
+<link rel="stylesheet" type="text/css" href={static_path(@conn, "/assets/css/home_page.css")}/>
 
+<div class="container">
+  <%= for live_stream <- @live_streams do %>
+    <.link href={"/live/#{live_stream.user.username}"}><%= live_stream.user.username %></.link>
+  <% end %>
+</div>

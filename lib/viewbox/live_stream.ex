@@ -62,21 +62,31 @@ defmodule Viewbox.LiveStream do
     {[], state}
   end
 
+  def handle_child_notification(:end_of_stream, _child, _ctx, state) do
+    Membrane.Pipeline.terminate(self())
+    {[], state}
+  end
+
   def handle_child_notification(_notification, _child, _ctx, state) do
     {[], state}
   end
 
   @impl true
   def handle_info({:socket_control_needed, socket, source} = notification, _ctx, state) do
-    case Membrane.RTMP.SourceBin.pass_control(socket, source) do
-      :ok ->
-        :ok
+    action =
+      case Membrane.RTMP.SourceBin.pass_control(socket, source) do
+        :ok ->
+          []
 
-      {:error, :not_owner} ->
-        Process.send_after(self(), notification, 200)
-    end
+        {:error, :not_owner} ->
+          Process.send_after(self(), notification, 200)
+          []
 
-    {[], state}
+        {:error, :closed} ->
+          [terminate: :shutdown]
+      end
+
+    {action, state}
   end
 
   # The rest of the module is used for self-termination of the pipeline after processing finishes
@@ -87,6 +97,15 @@ defmodule Viewbox.LiveStream do
 
   @impl true
   def handle_element_end_of_stream(_child, _pad, _ctx, state) do
+    {[], state}
+  end
+
+  @impl true
+  def handle_terminate_request(_ctx, state) do
+    Agent.update(Viewbox.SocketAgent, fn sockets ->
+      Map.delete(sockets, state.socket)
+    end)
+
     {[], state}
   end
 end

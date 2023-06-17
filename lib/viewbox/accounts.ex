@@ -38,42 +38,6 @@ defmodule Viewbox.Accounts do
   def get_user_by_username!(username), do: Repo.get_by!(User, username: username)
 
   @doc """
-  Creates a user.
-
-  ## Examples
-
-      iex> create_user(%{field: value})
-      {:ok, %User{}}
-
-      iex> create_user(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def create_user(attrs \\ %{}) do
-    %User{}
-    |> User.create_changeset(attrs)
-    |> Repo.insert(returning: true)
-  end
-
-  @doc """
-  Updates a user.
-
-  ## Examples
-
-      iex> update_user(user, %{field: new_value})
-      {:ok, %User{}}
-
-      iex> update_user(user, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def update_user(%User{} = user, attrs) do
-    user
-    |> User.update_changeset(attrs)
-    |> Repo.update()
-  end
-
-  @doc """
   Deletes a user.
 
   ## Examples
@@ -87,19 +51,6 @@ defmodule Viewbox.Accounts do
   """
   def delete_user(%User{} = user) do
     Repo.delete(user)
-  end
-
-  @doc """
-  Returns an `%Ecto.Changeset{}` for tracking user changes.
-
-  ## Examples
-
-      iex> change_user(user)
-      %Ecto.Changeset{data: %User{}}
-
-  """
-  def change_user(%User{} = user, attrs \\ %{}) do
-    User.update_changeset(user, attrs)
   end
 
   alias Viewbox.Accounts.{User, UserToken, UserNotifier}
@@ -205,8 +156,7 @@ defmodule Viewbox.Accounts do
   end
 
   @doc """
-  Emulates that the username will change without actually changing
-  it in the database.
+  Updates the user username.
 
   ## Examples
 
@@ -221,53 +171,7 @@ defmodule Viewbox.Accounts do
     user
     |> User.username_changeset(attrs)
     |> User.validate_current_password(password)
-    |> Ecto.Changeset.apply_action(:update)
-  end
-
-  @doc """
-  Updates the user email using the given token.
-
-  If the token matches, the user email is updated and the token is deleted.
-  The confirmed_at date is also updated to the current time.
-  """
-  def update_user_email(user, token) do
-    context = "change:#{user.email}"
-
-    with {:ok, query} <- UserToken.verify_change_email_token_query(token, context),
-         %UserToken{sent_to: email} <- Repo.one(query),
-         {:ok, _} <- Repo.transaction(user_email_multi(user, email, context)) do
-      :ok
-    else
-      _ -> :error
-    end
-  end
-
-  defp user_email_multi(user, email, context) do
-    changeset =
-      user
-      |> User.email_changeset(%{email: email})
-      |> User.confirm_changeset()
-
-    Ecto.Multi.new()
-    |> Ecto.Multi.update(:user, changeset)
-    |> Ecto.Multi.delete_all(:tokens, UserToken.user_and_contexts_query(user, [context]))
-  end
-
-  @doc ~S"""
-  Delivers the update email instructions to the given user.
-
-  ## Examples
-
-      iex> deliver_user_update_email_instructions(user, current_email, &url(~p"/users/settings/confirm_email/#{&1})")
-      {:ok, %{to: ..., body: ...}}
-
-  """
-  def deliver_user_update_email_instructions(%User{} = user, current_email, update_email_url_fun)
-      when is_function(update_email_url_fun, 1) do
-    {encoded_token, user_token} = UserToken.build_email_token(user, "change:#{current_email}")
-
-    Repo.insert!(user_token)
-    UserNotifier.deliver_update_email_instructions(user, update_email_url_fun.(encoded_token))
+    |> Repo.update()
   end
 
   @doc """
