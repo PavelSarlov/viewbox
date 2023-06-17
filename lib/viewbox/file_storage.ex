@@ -13,6 +13,8 @@ defmodule Viewbox.FileStorage do
           socket: port()
         }
 
+  alias Viewbox.LiveStream
+
   @impl true
   def init(%__MODULE__{} = config), do: config
 
@@ -46,12 +48,12 @@ defmodule Viewbox.FileStorage do
   end
 
   defp build_output_folder(state, name) do
-    username =
+    %LiveStream{user: user} =
       Agent.get(Viewbox.SocketAgent, fn
         sockets -> Map.fetch!(sockets, state.socket)
       end)
 
-    path = [state.location, username, "live", name] |> Path.join()
+    path = [state.location, user.id |> Integer.to_string(), "live", name] |> Path.join()
     File.mkdir_p!(Path.dirname(path))
     path
   end

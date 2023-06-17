@@ -1,6 +1,8 @@
 defmodule ViewboxWeb.Router do
   use ViewboxWeb, :router
 
+  import ViewboxWeb.UserAuth
+
   pipeline :browser do
     plug(:accepts, ["html"])
     plug(:fetch_session)
@@ -15,23 +17,18 @@ defmodule ViewboxWeb.Router do
   end
 
   scope "/", ViewboxWeb do
-    pipe_through(:browser)
+    pipe_through([:browser, :fetch_current_user])
 
-    get("/", PageController, :index)
-    get("/live/:username", LivestreamController, :index)
-
-    # users
-    get("/users", UserController, :index)
-    get("/users/:username", UserController, :show)
-    get("/register", UserController, :new)
-    post("/users", UserController, :create)
+    get("/", HomePageController, :index)
+    get("/browse", HomePageController, :index)
+    live("/live/:username", LiveStreamLive, :new)
   end
 
   # Other scopes may use custom stacks.
   scope "/api", ViewboxWeb do
     pipe_through(:api)
 
-    get("/stream/:username/:filename", LivestreamController, :stream)
+    get("/stream/:id/:filename", LiveStreamController, :stream)
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
@@ -47,6 +44,45 @@ defmodule ViewboxWeb.Router do
       pipe_through(:browser)
 
       live_dashboard("/dashboard", metrics: ViewboxWeb.Telemetry)
+      forward("/mailbox", Plug.Swoosh.MailboxPreview)
+    end
+  end
+
+  ## Authentication routes
+
+  scope "/", ViewboxWeb do
+    pipe_through([:browser, :fetch_current_user, :redirect_if_user_is_authenticated])
+
+    live_session :redirect_if_user_is_authenticated,
+      on_mount: [{ViewboxWeb.UserAuth, :redirect_if_user_is_authenticated}] do
+      live("/users/register", UserRegistrationLive, :new)
+      live("/users/log_in", UserLoginLive, :new)
+      live("/users/reset_password", UserForgotPasswordLive, :new)
+      live("/users/reset_password/:token", UserResetPasswordLive, :edit)
+    end
+
+    post("/users/log_in", UserSessionController, :create)
+  end
+
+  scope "/", ViewboxWeb do
+    pipe_through([:browser, :fetch_current_user, :require_authenticated_user])
+
+    live_session :require_authenticated_user,
+      on_mount: [{ViewboxWeb.UserAuth, :ensure_authenticated}] do
+      live("/users/settings", UserSettingsLive, :edit)
+      live("/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email)
+    end
+  end
+
+  scope "/", ViewboxWeb do
+    pipe_through([:browser])
+
+    delete("/users/log_out", UserSessionController, :delete)
+
+    live_session :current_user,
+      on_mount: [{ViewboxWeb.UserAuth, :mount_current_user}] do
+      live("/users/confirm/:token", UserConfirmationLive, :edit)
+      live("/users/confirm", UserConfirmationInstructionsLive, :new)
     end
   end
 end

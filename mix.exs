@@ -32,6 +32,7 @@ defmodule Viewbox.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:bcrypt_elixir, "~> 3.0"},
       {:phoenix, "~> 1.7.3"},
       {:phoenix_ecto, "~> 4.4"},
       {:ecto_sql, "~> 3.10"},
@@ -39,6 +40,8 @@ defmodule Viewbox.MixProject do
       {:phoenix_html, "~> 3.3"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:phoenix_live_view, "~> 0.19.0"},
+      {:swoosh, "~> 1.3"},
+      {:finch, "~> 0.13"},
       {:floki, ">= 0.30.0", only: :test},
       {:phoenix_live_dashboard, "~> 0.8.0"},
       {:esbuild, "~> 0.7", runtime: Mix.env() == :dev},
@@ -50,8 +53,7 @@ defmodule Viewbox.MixProject do
       {:plug_cowboy, "~> 2.5"},
       {:membrane_core, "~> 0.11.2"},
       {:membrane_rtmp_plugin, "~> 0.12.1"},
-      {:membrane_http_adaptive_stream_plugin, "~> 0.12.0"},
-      {:bcrypt_elixir, "~> 3.0.1"}
+      {:membrane_http_adaptive_stream_plugin, "~> 0.12.0"}
     ]
   end
 

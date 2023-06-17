@@ -2,6 +2,7 @@ defmodule Viewbox.Application do
   # See https://hexdocs.pm/elixir/Application.html
   # for more information on OTP Applications
   @moduledoc false
+  alias Viewbox.LiveStream
   alias Membrane.RTMP.Source.TcpServer
 
   use Application
@@ -20,7 +21,9 @@ defmodule Viewbox.Application do
         ip: @host
       ],
       socket_handler: fn socket ->
-        Agent.update(Viewbox.SocketAgent, fn sockets -> Map.put(sockets, socket, nil) end)
+        Agent.update(Viewbox.SocketAgent, fn sockets ->
+          Map.put(sockets, socket, %LiveStream{viewer_count: 0, user: nil})
+        end)
 
         {:ok, _supervisor_pid, pipeline_pid} =
           Viewbox.LiveStream.start_link(
@@ -44,6 +47,8 @@ defmodule Viewbox.Application do
       ViewboxWeb.Telemetry,
       # Start the Ecto repository
       Viewbox.Repo,
+      # Start Finch
+      {Finch, name: Viewbox.Finch},
       # Start the PubSub system
       {Phoenix.PubSub, name: Viewbox.PubSub},
       # Start the Endpoint (http/https)

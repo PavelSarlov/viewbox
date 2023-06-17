@@ -4,6 +4,9 @@ defmodule Viewbox.LiveStream do
   alias Membrane.HTTPAdaptiveStream.Sink
   alias Membrane.RTMP.SourceBin
 
+  @enforce_keys ~w(viewer_count user)a
+  defstruct @enforce_keys
+
   @stream_output_dir Application.compile_env(:viewbox, :stream_output_dir, "output")
 
   @impl true
