@@ -15,6 +15,8 @@ defmodule Viewbox.FileStorage do
 
   alias Viewbox.LiveStream
 
+  @stream_live_dir Application.compile_env(:viewbox, :stream_live_dir, "live")
+
   @impl true
   def init(%__MODULE__{} = config), do: config
 
@@ -53,7 +55,7 @@ defmodule Viewbox.FileStorage do
         sockets -> Map.fetch!(sockets, state.socket)
       end)
 
-    path = [state.location, user.id |> Integer.to_string(), "live", name] |> Path.join()
+    path = [state.location, Integer.to_string(user.id), @stream_live_dir, name] |> Path.join()
     File.mkdir_p!(Path.dirname(path))
     path
   end

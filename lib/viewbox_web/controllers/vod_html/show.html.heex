@@ -1,18 +1,18 @@
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
 <.header>
-  Watching <strong><%= @user.username %></strong>
+  User <%= @vod.user.username %>'s vod <%= @vod.id %>
 </.header>
 
 <div class="container">
-  <video id="player" autoplay playinline preload class="player"/>
+  <video id="player" controls playinline preload class="player"/>
   <div class="player-overlay">
   </div>
 </div>
 
 <script>
 var video = document.getElementById('player');
-var videoSrc = window.location.origin + `/api/stream/<%= @user.id %>/<%= @output_file %>`;
+var videoSrc = window.location.origin + `/api/vods/<%= @vod.user.id %>/<%= @vod.id %>/<%= @output_file %>`;
 if (Hls.isSupported()) {
   var hls = new Hls();
   hls.loadSource(videoSrc);
@@ -21,3 +21,5 @@ if (Hls.isSupported()) {
   video.src = videoSrc;
 }
 </script>
+
+<.back navigate={~p"/vods"}>Back to vods</.back>

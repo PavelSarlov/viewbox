@@ -10,6 +10,8 @@ defmodule Viewbox.Accounts.User do
     field(:confirmed_at, :naive_datetime)
     field(:stream_key, :binary)
 
+    has_many(:vods, Viewbox.Vods.Vod)
+
     timestamps()
   end
 

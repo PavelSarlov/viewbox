@@ -22,13 +22,16 @@ defmodule ViewboxWeb.Router do
     get("/", HomePageController, :index)
     get("/browse", HomePageController, :index)
     live("/live/:username", LiveStreamLive, :new)
+    get("/vods/:username", VodController, :index)
+    get("/vods/:username/:vod_id", VodController, :show)
   end
 
   # Other scopes may use custom stacks.
   scope "/api", ViewboxWeb do
     pipe_through(:api)
 
-    get("/stream/:id/:filename", LiveStreamController, :stream)
+    get("/stream/:user_id/:filename", LiveStreamController, :stream)
+    get("/vods/:user_id/:vod_id/:filename", VodController, :stream)
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development

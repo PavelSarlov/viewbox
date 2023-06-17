@@ -1,6 +1,7 @@
 defmodule Viewbox.LiveStream do
   use Membrane.Pipeline
 
+  alias Viewbox.Vods
   alias Membrane.HTTPAdaptiveStream.Sink
   alias Membrane.RTMP.SourceBin
 
@@ -27,6 +28,7 @@ defmodule Viewbox.LiveStream do
         persist?: true,
         target_window_duration: :infinity,
         mode: :live,
+        hls_mode: :muxed_av,
         storage: %Viewbox.FileStorage{
           location: @stream_output_dir,
           socket: socket
@@ -103,6 +105,8 @@ defmodule Viewbox.LiveStream do
   @impl true
   def handle_terminate_request(_ctx, state) do
     Agent.update(Viewbox.SocketAgent, fn sockets ->
+      %{user: user} = Map.get(sockets, state.socket)
+      Vods.create_vod(%{user: user})
       Map.delete(sockets, state.socket)
     end)
 

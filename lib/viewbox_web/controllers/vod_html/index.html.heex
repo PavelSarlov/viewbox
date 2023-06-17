@@ -1,0 +1,10 @@
+<.header>
+  User <%= @user.username %> vods
+</.header>
+
+<ul>
+  <%= for vod <- @user.vods do %>
+    <li><.link href={"/vods/#{@user.username}/#{vod.id}"}>Vod <%= vod.id %></.link></li>
+  <% end %>
+</ul>
+
