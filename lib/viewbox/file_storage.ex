@@ -51,9 +51,7 @@ defmodule Viewbox.FileStorage do
 
   defp build_output_folder(state, name) do
     %LiveStream{user: user} =
-      Agent.get(Viewbox.SocketAgent, fn
-        sockets -> Map.fetch!(sockets, state.socket)
-      end)
+      LiveStream.update_live_stream(state.socket, fn _ -> %{is_live?: true} end)
 
     path = [state.location, Integer.to_string(user.id), @stream_live_dir, name] |> Path.join()
     File.mkdir_p!(Path.dirname(path))

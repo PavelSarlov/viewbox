@@ -1,12 +1,22 @@
 defmodule Viewbox.LiveStream do
   use Membrane.Pipeline
 
+  alias Viewbox.LiveStream
   alias Viewbox.Vods
   alias Membrane.HTTPAdaptiveStream.Sink
   alias Membrane.RTMP.SourceBin
 
-  @enforce_keys ~w(viewer_count user)a
-  defstruct @enforce_keys
+  @enforce_keys ~w()a
+  @optional_keys ~w(user socket)a
+  @default_keys [is_live?: false, viewer_count: 0]
+  defstruct @enforce_keys ++ @optional_keys ++ @default_keys
+
+  @type t :: %__MODULE__{
+          viewer_count: non_neg_integer(),
+          socket: port(),
+          user: Accounts.User.t(),
+          is_live?: boolean()
+        }
 
   @stream_output_dir Application.compile_env(:viewbox, :stream_output_dir, "output")
 
@@ -64,7 +74,8 @@ defmodule Viewbox.LiveStream do
     {[], state}
   end
 
-  def handle_child_notification(:end_of_stream, _child, _ctx, state) do
+  def handle_child_notification(notification, _child, _ctx, state)
+      when notification in [:end_of_stream, :socket_closed, :unexpected_socket_closed] do
     Membrane.Pipeline.terminate(self())
     {[], state}
   end
@@ -75,20 +86,18 @@ defmodule Viewbox.LiveStream do
 
   @impl true
   def handle_info({:socket_control_needed, socket, source} = notification, _ctx, state) do
-    action =
-      case Membrane.RTMP.SourceBin.pass_control(socket, source) do
-        :ok ->
-          []
+    case Membrane.RTMP.SourceBin.pass_control(socket, source) do
+      :ok ->
+        nil
 
-        {:error, :not_owner} ->
-          Process.send_after(self(), notification, 200)
-          []
+      {:error, :not_owner} ->
+        Process.send_after(self(), notification, 200)
 
-        {:error, :closed} ->
-          [terminate: :shutdown]
-      end
+      {:error, :closed} ->
+        Membrane.Pipeline.terminate(self())
+    end
 
-    {action, state}
+    {[], state}
   end
 
   # The rest of the module is used for self-termination of the pipeline after processing finishes
@@ -111,5 +120,61 @@ defmodule Viewbox.LiveStream do
     end)
 
     {[], state}
+  end
+
+  def get_live_streams() do
+    Agent.get(Viewbox.SocketAgent, fn sockets ->
+      Map.values(sockets)
+    end)
+  end
+
+  def get_live_stream(username: username) do
+    case get_live_streams()
+         |> Enum.find(fn live_stream -> live_stream.user.username == username end) do
+      nil -> %LiveStream{}
+      x -> x
+    end
+  end
+
+  def get_live_stream(socket: socket) do
+    case Agent.get(Viewbox.SocketAgent, fn sockets -> sockets[socket] end) do
+      nil -> %LiveStream{}
+      x -> x
+    end
+  end
+
+  def get_live_stream(_), do: nil
+
+  def update_live_stream(nil, _), do: %LiveStream{}
+
+  def update_live_stream(socket, update_fn) when is_function(update_fn, 1) do
+    Agent.update(Viewbox.SocketAgent, fn sockets ->
+      case sockets[socket] do
+        nil ->
+          sockets
+
+        live_stream ->
+          %{
+            sockets
+            | socket => Map.merge(live_stream, update_fn.(live_stream))
+          }
+      end
+    end)
+
+    live_stream = get_live_stream(socket: socket)
+
+    case live_stream.user do
+      nil ->
+        nil
+
+      user ->
+        Phoenix.PubSub.broadcast(
+          Viewbox.PubSub,
+          "live:#{user.username}",
+          live_stream
+        )
+    end
+
+    live_stream
   end
 end

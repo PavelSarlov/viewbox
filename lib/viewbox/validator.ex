@@ -35,8 +35,8 @@ defimpl Membrane.RTMP.MessageValidator, for: Viewbox.Validator do
       %User{stream_key: bin_stream_key} = user ->
         case Ecto.UUID.dump(stream_key) do
           {:ok, ^bin_stream_key} ->
-            Agent.update(Viewbox.SocketAgent, fn sockets ->
-              Map.put(sockets, impl.socket, %LiveStream{viewer_count: 0, user: user})
+            LiveStream.update_live_stream(impl.socket, fn _ ->
+              %{is_live?: true, user: user}
             end)
 
             {:ok, "publish stream success"}

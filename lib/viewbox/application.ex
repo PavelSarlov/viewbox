@@ -22,7 +22,7 @@ defmodule Viewbox.Application do
       ],
       socket_handler: fn socket ->
         Agent.update(Viewbox.SocketAgent, fn sockets ->
-          Map.put(sockets, socket, %LiveStream{viewer_count: 0, user: nil})
+          Map.put(sockets, socket, %LiveStream{socket: socket})
         end)
 
         {:ok, _supervisor_pid, pipeline_pid} =
@@ -42,6 +42,7 @@ defmodule Viewbox.Application do
         id: Viewbox.SocketAgent,
         start: {Agent, :start_link, [fn -> %{} end, [name: Viewbox.SocketAgent]]}
       },
+      Viewbox.LiveMonitor,
 
       # Start the Telemetry supervisor
       ViewboxWeb.Telemetry,
