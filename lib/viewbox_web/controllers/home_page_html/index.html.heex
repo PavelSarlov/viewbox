@@ -1,7 +1,16 @@
 <link rel="stylesheet" type="text/css" href={static_path(@conn, "/assets/css/home_page.css")}/>
 
 <div class="container">
-  <%= for live_stream <- @live_streams do %>
-    <.link href={"/live/#{live_stream.user.username}"}><%= live_stream.user.username %></.link>
+  <%= if length(@live_streams) > 0 do %>
+    <%= for live_stream <- @live_streams do %>
+      <.link href={"/live/#{live_stream.user.username}"}>
+        <div class="stream-item">
+          <img class="thumbnail" src={"data:image/png;base64,#{live_stream.thumbnail}"} alt="thumbnail" />
+          <p><%= live_stream.user.username %></p>
+        </div>
+      </.link>
+    <% end %>
+  <% else %>
+    <.header>No livestreams available</.header>
   <% end %>
 </div>

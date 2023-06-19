@@ -19,6 +19,9 @@ defmodule Viewbox.LiveStream do
         }
 
   @stream_output_dir Application.compile_env(:viewbox, :stream_output_dir, "output")
+  @stream_output_file Application.compile_env(:viewbox, :stream_output_file, "index.m3u8")
+  @stream_live_dir Application.compile_env(:viewbox, :stream_live_dir, "live")
+  @stream_live_file Application.compile_env(:viewbox, :stream_live_file, "live.m3u8")
 
   @impl true
   def handle_init(_ctx, socket: socket, validator: validator, use_ssl?: use_ssl?) do
@@ -176,5 +179,44 @@ defmodule Viewbox.LiveStream do
     end
 
     live_stream
+  end
+
+  def get_thumbnail(user_id, nil) do
+    [@stream_output_dir, Integer.to_string(user_id), @stream_live_dir]
+    |> Path.join()
+    |> get_thumbnail_base64()
+  end
+
+  def get_thumbnail(user_id, vod_id) do
+    [@stream_output_dir, Integer.to_string(user_id), Integer.to_string(vod_id)]
+    |> Path.join()
+    |> get_thumbnail_base64()
+  end
+
+  defp get_thumbnail_base64(path) do
+    from = [path, @stream_output_file] |> Path.join()
+    to = [path, "thumbnail.png"] |> Path.join()
+
+    System.cmd(
+      "ffmpeg",
+      [
+        "-i",
+        from,
+        "-vframes",
+        "1",
+        "-s",
+        "1280x720",
+        "-ss",
+        "1",
+        to,
+        "-y",
+        "-hide_banner"
+      ]
+    )
+
+    case File.read(to) do
+      {:ok, content} -> Base.encode64(content)
+      {:error, _} -> nil
+    end
   end
 end

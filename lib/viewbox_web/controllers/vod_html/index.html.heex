@@ -1,10 +1,21 @@
-<.header>
-  User <%= @user.username %> vods
-</.header>
+<link rel="stylesheet" type="text/css" href={static_path(@conn, "/assets/css/vods.css")}/>
 
-<ul>
-  <%= for vod <- @user.vods do %>
-    <li><.link href={"/vods/#{@user.username}/#{vod.id}"}>Vod <%= vod.id %></.link></li>
-  <% end %>
-</ul>
+<section class="container">
+  <.header>
+    User <%= @user.username %> vods
+  </.header>
+
+  <ul class="vod-list">
+    <%= for vod <- @user.vods do %>
+      <li>
+        <.link href={"/vods/#{@user.username}/#{vod.id}"}>
+          <div class="vod-item">
+            <img class="thumbnail" src={"data:image/png;base64,#{vod.thumbnail}"} alt={"Vod #{vod.id} thumbnail"} />
+            <p>Vod <%= vod.id %></p>
+          </div>
+        </.link>
+      </li>
+    <% end %>
+  </ul>
+</section>
 

@@ -1,6 +1,7 @@
 defmodule ViewboxWeb.VodController do
   use ViewboxWeb, :controller
 
+  alias Viewbox.LiveStream
   alias Viewbox.Accounts
   alias Viewbox.Vods
 
@@ -9,6 +10,20 @@ defmodule ViewboxWeb.VodController do
 
   def index(conn, %{"username" => username}) do
     user = Accounts.get_user_by_username!(username)
+
+    user = %{
+      user
+      | vods:
+          user.vods
+          |> Enum.map(fn vod ->
+            Map.put(
+              vod,
+              :thumbnail,
+              LiveStream.get_thumbnail(user.id, vod.id)
+            )
+          end)
+    }
+
     render(conn, :index, user: user)
   end
 
