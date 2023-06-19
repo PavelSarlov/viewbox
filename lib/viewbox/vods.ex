@@ -10,6 +10,7 @@ defmodule Viewbox.Vods do
 
   @stream_output_dir Application.compile_env(:viewbox, :stream_output_dir, "output")
   @stream_live_dir Application.compile_env(:viewbox, :stream_live_dir, "live")
+  @stream_live_file Application.compile_env(:viewbox, :stream_live_file, "live.m3u8")
 
   @doc """
   Returns the list of vods.
@@ -58,6 +59,11 @@ defmodule Viewbox.Vods do
       |> Vod.changeset(attrs)
       |> Ecto.Changeset.put_assoc(:user, attrs.user)
       |> Repo.insert(returning: true)
+
+    [@stream_output_dir, Integer.to_string(vod.user_id), @stream_live_dir, @stream_live_file]
+    |> Path.join()
+    |> Path.expand()
+    |> File.rm()
 
     from =
       [@stream_output_dir, Integer.to_string(vod.user_id), @stream_live_dir]

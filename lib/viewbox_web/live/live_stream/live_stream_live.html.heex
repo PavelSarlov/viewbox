@@ -8,7 +8,7 @@
       <.button><.link href={"/vods/#{@user.username}"} class="text-sm font-semibold">Vods</.link></.button>
     </.header>
     <%= if @live_stream.is_live? do %>
-      <video class="player" id="player" controls webkit-playsinline playsinline preload class="player"/>
+      <video class="player" id="player" controls webkit-playsinline playsinline autoplay preload class="player"/>
       <p><%= @live_stream.viewer_count %> viewers</p>
       <div class="stream_overlay"></div>
     <% else %>

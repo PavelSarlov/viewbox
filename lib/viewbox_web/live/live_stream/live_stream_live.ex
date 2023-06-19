@@ -9,7 +9,7 @@ defmodule ViewboxWeb.LiveStreamLive do
   alias Plug
 
   @output_dir Application.compile_env(:viewbox, :stream_output_dir, "output")
-  @output_file Application.compile_env(:viewbox, :stream_output_file, "index.m3u8")
+  @output_file Application.compile_env(:viewbox, :stream_live_file, "live.m3u8")
 
   def mount(%{"username" => username} = params, session, socket) do
     user = Repo.get_by!(User, username: username)

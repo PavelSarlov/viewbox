@@ -23,8 +23,8 @@ defmodule Viewbox.LiveStream do
   @impl true
   def handle_init(_ctx, socket: socket, validator: validator, use_ssl?: use_ssl?) do
     segment_duration = %Sink.SegmentDuration{
-      min: 8 |> Membrane.Time.seconds(),
-      target: 10 |> Membrane.Time.seconds()
+      min: 2 |> Membrane.Time.seconds(),
+      target: 4 |> Membrane.Time.seconds()
     }
 
     spec = [
