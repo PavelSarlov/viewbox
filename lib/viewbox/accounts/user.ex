@@ -12,6 +12,16 @@ defmodule Viewbox.Accounts.User do
 
     has_many(:vods, Viewbox.Vods.Vod)
 
+    many_to_many(:followers, Viewbox.Accounts.User,
+      join_through: Viewbox.Accounts.Follower,
+      join_keys: [streamer_id: :id, follower_id: :id]
+    )
+
+    many_to_many(:following, Viewbox.Accounts.User,
+      join_through: Viewbox.Accounts.Follower,
+      join_keys: [follower_id: :id, streamer_id: :id]
+    )
+
     timestamps()
   end
 

@@ -6,7 +6,7 @@ defmodule Viewbox.Accounts do
   import Ecto.Query, warn: false
   alias Viewbox.Repo
 
-  alias Viewbox.Accounts.User
+  alias Viewbox.Accounts.{User, Follower}
 
   @doc """
   Returns the list of users.
@@ -35,8 +35,8 @@ defmodule Viewbox.Accounts do
       ** (Ecto.NoResultsError)
 
   """
-  def get_user_by_username!(username),
-    do: Repo.get_by!(User, username: username) |> Repo.preload(:vods)
+  def get_user_by_username!(username, preloads \\ []),
+    do: Repo.get_by!(User, username: username) |> Repo.preload(preloads)
 
   @doc """
   Deletes a user.
@@ -106,7 +106,7 @@ defmodule Viewbox.Accounts do
       ** (Ecto.NoResultsError)
 
   """
-  def get_user!(id), do: Repo.get!(User, id) |> Repo.preload(:vods)
+  def get_user!(id, preloads \\ []), do: Repo.get!(User, id) |> Repo.preload(preloads)
 
   ## User registration
 
@@ -234,9 +234,9 @@ defmodule Viewbox.Accounts do
     nil
   end
 
-  def get_user_by_session_token(token) do
+  def get_user_by_session_token(token, preloads \\ []) do
     {:ok, query} = UserToken.verify_session_token_query(token)
-    Repo.one(query)
+    Repo.one(query) |> Repo.preload(preloads)
   end
 
   @doc """
@@ -353,6 +353,19 @@ defmodule Viewbox.Accounts do
     |> case do
       {:ok, %{user: user}} -> {:ok, user}
       {:error, :user, changeset, _} -> {:error, changeset}
+    end
+  end
+
+  def add_or_remove_follower(follower_id: follower_id, streamer_id: streamer_id) do
+    follower =
+      %Follower{follower_id: follower_id, streamer_id: streamer_id} |> Follower.changeset()
+
+    case(Repo.get_by(Follower, follower_id: follower_id, streamer_id: streamer_id)) do
+      nil ->
+        Repo.insert(follower)
+
+      follower ->
+        Repo.delete(follower)
     end
   end
 end

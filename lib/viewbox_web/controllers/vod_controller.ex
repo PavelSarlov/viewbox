@@ -9,7 +9,7 @@ defmodule ViewboxWeb.VodController do
   @output_file Application.compile_env(:viewbox, :stream_output_file, "index.m3u8")
 
   def index(conn, %{"username" => username}) do
-    user = Accounts.get_user_by_username!(username)
+    user = Accounts.get_user_by_username!(username, [:vods])
 
     user = %{
       user

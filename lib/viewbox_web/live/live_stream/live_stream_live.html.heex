@@ -5,12 +5,18 @@
   <section class="stream">
     <.header class="header">
       <p>Watching <strong><%= @user.username %></strong></p>
-      <.button><.link href={"/vods/#{@user.username}"} class="text-sm font-semibold">Vods</.link></.button>
+      <div class="actions">
+        <.button><.link href={"/vods/#{@user.username}"} class="text-sm font-semibold">Vods</.link></.button>
+        <%= if @current_user !== nil && @current_user.id !== @user.id do %>
+          <.button phx-click="toggle_follow">
+            <%= @current_user.following |> Enum.find(& &1.id === @user.id) |> get_follow_btn_text %>
+          </.button>
+        <%= end %>
+      </div>
     </.header>
     <%= if @live_stream.is_live? do %>
       <video class="player" id="player" controls webkit-playsinline playsinline autoplay preload class="player"/>
       <p><%= @live_stream.viewer_count %> viewers</p>
-      <div class="stream_overlay"></div>
     <% else %>
       <img class="offline" src={static_path(@socket, "/assets/img/offline.gif")}/>
     <% end %>
