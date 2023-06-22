@@ -39,6 +39,8 @@ defimpl Membrane.RTMP.MessageValidator, for: Viewbox.Validator do
               %{is_live?: true, user: user}
             end)
 
+            Phoenix.PubSub.broadcast(Viewbox.PubSub, "toasts", {:streamer_went_live, user})
+
             {:ok, "publish stream success"}
 
           _ ->

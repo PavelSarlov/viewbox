@@ -1,6 +1,6 @@
 <link rel="stylesheet" type="text/css" href={static_path(if assigns[:conn] do @conn else @socket end, "/assets/css/global.css")}/>
 
 <main>
-  <.flash_group flash={@flash} />
+  <%= live_render(if assigns[:conn] do @conn else @socket end, ViewboxWeb.ToastsLive, id: "toasts" ) %>
   <%= @inner_content %>
 </main>
