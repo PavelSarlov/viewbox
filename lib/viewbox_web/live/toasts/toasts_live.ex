@@ -17,7 +17,7 @@ defmodule ViewboxWeb.ToastsLive do
     following =
       case socket.assigns.current_user do
         nil -> []
-        user -> Accounts.get_user_followings(user.id)
+        user -> Accounts.get_user!(user.id, [:following]).following
       end
 
     updated_socket =

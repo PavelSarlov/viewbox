@@ -356,13 +356,6 @@ defmodule Viewbox.Accounts do
     end
   end
 
-  def get_user_followings(user_id) do
-    from(Follower,
-      where: [follower_id: ^user_id]
-    )
-    |> Repo.all()
-  end
-
   def add_or_remove_follower(follower_id: follower_id, streamer_id: streamer_id) do
     follower =
       %Follower{follower_id: follower_id, streamer_id: streamer_id} |> Follower.changeset()

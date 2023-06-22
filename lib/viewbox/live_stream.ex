@@ -181,14 +181,14 @@ defmodule Viewbox.LiveStream do
     live_stream
   end
 
-  def get_thumbnail(user_id, nil) do
-    [@stream_output_dir, Integer.to_string(user_id), @stream_live_dir]
-    |> Path.join()
-    |> get_thumbnail_base64()
-  end
-
   def get_thumbnail(user_id, vod_id) do
-    [@stream_output_dir, Integer.to_string(user_id), Integer.to_string(vod_id)]
+    dir =
+      case vod_id do
+        nil -> @stream_live_dir
+        vod_id -> Integer.to_string(vod_id)
+      end
+
+    [@stream_output_dir, Integer.to_string(user_id), dir]
     |> Path.join()
     |> get_thumbnail_base64()
   end
