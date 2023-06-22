@@ -9,8 +9,8 @@ defimpl Membrane.RTMP.MessageValidator, for: Viewbox.Validator do
   alias Viewbox.Accounts
 
   @impl true
-  def validate_release_stream(impl, message) do
-    validate_stream_key(impl, message.stream_key)
+  def validate_release_stream(_impl, _message) do
+    {:ok, "stream released"}
   end
 
   @impl true
