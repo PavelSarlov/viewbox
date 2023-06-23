@@ -7,7 +7,7 @@ defmodule ViewboxWeb.UserSettingsLive do
     ~H"""
     <.header class="text-center">
       Account Settings
-      <:subtitle>Manage your account email address and password settings</:subtitle>
+      <:subtitle>Manage your account username and password settings</:subtitle>
     </.header>
 
     <div class="space-y-12 divide-y">
@@ -51,10 +51,10 @@ defmodule ViewboxWeb.UserSettingsLive do
           phx-trigger-action={@trigger_submit}
         >
           <.input
-            field={@password_form[:email]}
+            field={@password_form[:username]}
             type="hidden"
-            id="hidden_user_email"
-            value={@current_email}
+            id="hidden_user_username"
+            value={@current_username}
           />
           <.input field={@password_form[:password]} type="password" label="New password" required />
           <.input

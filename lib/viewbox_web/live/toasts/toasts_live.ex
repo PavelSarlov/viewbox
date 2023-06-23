@@ -20,8 +20,6 @@ defmodule ViewboxWeb.ToastsLive do
         user -> Accounts.get_user!(user.id, [:following]).following
       end
 
-    IO.inspect(following)
-
     updated_socket =
       case Enum.find(following, &(&1.id === streamer.id)) do
         nil ->

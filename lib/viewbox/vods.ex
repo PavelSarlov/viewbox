@@ -21,8 +21,8 @@ defmodule Viewbox.Vods do
       [%Vod{}, ...]
 
   """
-  def list_vods do
-    Repo.all(Vod)
+  def list_vods(preload \\ []) do
+    Repo.all(Vod) |> Repo.preload(preload)
   end
 
   @doc """
@@ -39,7 +39,7 @@ defmodule Viewbox.Vods do
       ** (Ecto.NoResultsError)
 
   """
-  def get_vod!(id), do: Repo.get!(Vod, id) |> Repo.preload(:user)
+  def get_vod!(id, preload \\ []), do: Repo.get!(Vod, id) |> Repo.preload(preload)
 
   @doc """
   Creates a vod.
@@ -54,30 +54,36 @@ defmodule Viewbox.Vods do
 
   """
   def create_vod(attrs \\ %{}) do
-    {:ok, vod} =
+    result =
       %Vod{}
       |> Vod.changeset(attrs)
       |> Ecto.Changeset.put_assoc(:user, attrs.user)
       |> Repo.insert(returning: true)
 
-    [@stream_output_dir, Integer.to_string(vod.user_id), @stream_live_dir, @stream_live_file]
-    |> Path.join()
-    |> Path.expand()
-    |> File.rm()
+    case result do
+      {:ok, vod} ->
+        [@stream_output_dir, Integer.to_string(vod.user_id), @stream_live_dir, @stream_live_file]
+        |> Path.join()
+        |> Path.expand()
+        |> File.rm()
 
-    from =
-      [@stream_output_dir, Integer.to_string(vod.user_id), @stream_live_dir]
-      |> Path.join()
-      |> Path.expand()
+        from =
+          [@stream_output_dir, Integer.to_string(vod.user_id), @stream_live_dir]
+          |> Path.join()
+          |> Path.expand()
 
-    to =
-      [@stream_output_dir, Integer.to_string(vod.user_id), Integer.to_string(vod.id)]
-      |> Path.join()
-      |> Path.expand()
+        to =
+          [@stream_output_dir, Integer.to_string(vod.user_id), Integer.to_string(vod.id)]
+          |> Path.join()
+          |> Path.expand()
 
-    File.rename(from, to)
+        File.rename(from, to)
 
-    vod
+      _ ->
+        nil
+    end
+
+    result
   end
 
   @doc """

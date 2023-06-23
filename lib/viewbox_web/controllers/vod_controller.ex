@@ -28,7 +28,7 @@ defmodule ViewboxWeb.VodController do
   end
 
   def show(conn, %{"vod_id" => vod_id}) do
-    vod = Vods.get_vod!(vod_id)
+    vod = Vods.get_vod!(vod_id, [:user])
     render(conn, :show, vod: vod, output_file: @output_file)
   end
 

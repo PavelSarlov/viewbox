@@ -28,11 +28,11 @@ defmodule ViewboxWeb.UserRegistrationLiveTest do
       result =
         lv
         |> element("#registration_form")
-        |> render_change(user: %{"email" => "with spaces", "password" => "too short"})
+        |> render_change(user: %{"email" => "with spaces", "password" => "short"})
 
       assert result =~ "Register"
       assert result =~ "must have the @ sign and no spaces"
-      assert result =~ "should be at least 12 character"
+      assert result =~ "should be at least 8 character"
     end
   end
 
@@ -41,7 +41,13 @@ defmodule ViewboxWeb.UserRegistrationLiveTest do
       {:ok, lv, _html} = live(conn, ~p"/users/register")
 
       email = unique_user_email()
-      form = form(lv, "#registration_form", user: valid_user_attributes(email: email))
+      username = unique_username()
+
+      form =
+        form(lv, "#registration_form",
+          user: valid_user_attributes(email: email, username: username)
+        )
+
       render_submit(form)
       conn = follow_trigger_action(form, conn)
 
@@ -50,7 +56,7 @@ defmodule ViewboxWeb.UserRegistrationLiveTest do
       # Now do a logged in request and assert on the menu
       conn = get(conn, "/")
       response = html_response(conn, 200)
-      assert response =~ email
+      assert response =~ username
       assert response =~ "Settings"
       assert response =~ "Log out"
     end
