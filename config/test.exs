@@ -36,3 +36,7 @@ config :logger, level: :warning
 config :phoenix, :plug_init_mode, :runtime
 
 config :bcrypt_elixir, log_rounds: 12
+
+config :viewbox,
+  stream_output_dir: "test_output",
+  stream_output_file: "index.m3u8"

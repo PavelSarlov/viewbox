@@ -24,14 +24,29 @@ defmodule Viewbox.Accounts do
   @doc """
   Gets a single user.
 
+  ## Examples
+
+      iex> get_user("who")
+      %User{}
+
+      iex> get_user("")
+      nil
+
+  """
+  def get_user_by_username(username, preloads \\ []),
+    do: Repo.get_by(User, username: username) |> Repo.preload(preloads)
+
+  @doc """
+  Gets a single user.
+
   Raises `Ecto.NoResultsError` if the User does not exist.
 
   ## Examples
 
-      iex> get_user!(123)
+      iex> get_user!("123")
       %User{}
 
-      iex> get_user!(456)
+      iex> get_user!("456")
       ** (Ecto.NoResultsError)
 
   """

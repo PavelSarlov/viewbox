@@ -28,7 +28,7 @@ defimpl Membrane.RTMP.MessageValidator, for: Viewbox.Validator do
   defp validate_stream_key(impl, stream_key) do
     [username, stream_key] = String.split(stream_key, "_")
 
-    case Accounts.get_user_by_username!(username) do
+    case Accounts.get_user_by_username(username) do
       nil ->
         {:error, "unknown user"}
 
@@ -41,7 +41,7 @@ defimpl Membrane.RTMP.MessageValidator, for: Viewbox.Validator do
 
             Phoenix.PubSub.broadcast(Viewbox.PubSub, "toasts", {:streamer_went_live, user})
 
-            {:ok, "publish stream success"}
+            {:ok, "publish stream successful"}
 
           _ ->
             {:error, "bad stream key"}
