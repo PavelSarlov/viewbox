@@ -16,6 +16,11 @@ defmodule Viewbox.FileStorageTest do
         Map.put(sockets, file_storage.socket, %LiveStream{socket: file_storage.socket, user: user})
       end)
 
+      on_exit(fn ->
+        File.rm_rf("test_output")
+        Agent.update(Viewbox.SocketAgent, fn _ -> %{} end)
+      end)
+
       %{file_storage: file_storage, user: user, file_name: "manifest.m3u8"}
     end
 
